@@ -444,7 +444,8 @@ function getCommanderLists() {
 
 function updateUserRecommendations() {
     return new Promise((resolve) => {
-        console.log('Starting recommendations')
+        console.log('***********************************');
+        console.log('Starting Rec Generation: ' + new Date().toLocaleString())
         getCommanderLists().then((commander_lists) => {
             if (commander_lists != null) {
                 let rec_promises = [];
@@ -473,6 +474,7 @@ function updateUserRecommendations() {
                 }
                 Promise.all(rec_promises).then(() => {
                     console.log('Recs updated');
+                    console.log('***********************************');
                     resolve();
                 })
             }
@@ -518,8 +520,6 @@ function printRecs(commander_recs) {
 
 function getRecommendations(cmdr_list) {
     return new Promise((resolve) => {
-        console.log('***********************************');
-        console.log('Starting Rec Generation: ' + new Date().toLocaleString())
         let cmdr_dict = {};
         let theme_dict = {};
         let theme_href_dict = {};
@@ -533,7 +533,6 @@ function getRecommendations(cmdr_list) {
                         clearExisting(cmdr_list, cmdr_dict);
                         fixBadCards(cmdr_dict);
                         // printRecs(outputRecs(cmdr_dict));
-                        console.log('***********************************');
                         resolve(outputRecs(cmdr_dict));
                     });
                 });
