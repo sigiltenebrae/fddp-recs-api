@@ -341,6 +341,10 @@ function fixBadCards(cmdr_dict) {
     if (cmdr_dict["Golos, Tireless Pilgrim"] !== undefined) {
         cmdr_dict["Golos, Tireless Pilgrim"] = 0;
     }
+    if (cmdr_dict["Esika, God of the Tree // The Prismatic Bridge"] !== undefined) {
+        cmdr_dict["Esika, God of the Tree // The Prismatic Bridge"] = 0;
+    }
+
 }
 
 /*****************************************
