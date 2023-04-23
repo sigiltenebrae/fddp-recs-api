@@ -300,7 +300,7 @@ function removeEdhrecTopCards(type, cmdr_dict) {
         axios.get("https://json.edhrec.com/pages/commanders/" + type + ".json").then( res => {
             if (res && res.data && res.data.cardlist) {
                 for (let i = 0; i < res.data.cardlist.length; i++) {
-                    if (i === 99) {
+                    if (i === 75) {
                         break;
                     }
                     if (res.data.cardlist[i].name) {
@@ -514,6 +514,8 @@ function printRecs(commander_recs) {
 
 function getRecommendations(cmdr_list) {
     return new Promise((resolve) => {
+        console.log('***********************************');
+        console.log('Starting Rec Generation: ' + new Date().toLocaleString())
         let cmdr_dict = {};
         let theme_dict = {};
         let theme_href_dict = {};
@@ -523,10 +525,11 @@ function getRecommendations(cmdr_list) {
                 removeEdhrecTopCards('year', cmdr_dict).then(() => {
                     removeEdhrecTopCards('month', cmdr_dict).then(() => {
                         shiftThemes(cmdr_dict, theme_cmdr_dict);
-                        jitter(7, cmdr_dict);
+                        //jitter(7, cmdr_dict);
                         clearExisting(cmdr_list, cmdr_dict);
                         fixBadCards(cmdr_dict);
                         // printRecs(outputRecs(cmdr_dict));
+                        console.log('***********************************');
                         resolve(outputRecs(cmdr_dict));
                     });
                 });
@@ -537,6 +540,7 @@ function getRecommendations(cmdr_list) {
 
 axios_rt.use(axios, {requestsPerSecond: 15});
 
+let run_on_start = true;
 
 getUsers().then((users) => {
     if (users && users.length && users.length > 0) {
@@ -546,7 +550,7 @@ getUsers().then((users) => {
                 update = true;
             }
         }
-        if (update) {
+        if (update || run_on_start) {
             console.log('db data too old, updating now');
             updateUserRecommendations().then();
         }
