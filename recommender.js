@@ -451,9 +451,8 @@ function updateUserRecommendations() {
                 let rec_promises = [];
                 for(let [key, value] of Object.entries(commander_lists)){
                     rec_promises.push(new Promise((res) => {
-                        console.log('Getting recs for ' + key);
                         getRecommendations(value).then((user_recs) => {
-                            console.log('Got recs for ' + key + ':');
+                            console.log('Got recs for ' + key);
                             if (user_recs) {
                                 //printRecs(user_recs);
                                 pool.query('UPDATE users SET recs = $1, last_rec = now() WHERE id = $2', [JSON.stringify(user_recs), key],
