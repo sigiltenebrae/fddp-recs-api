@@ -166,15 +166,19 @@ function getMoxfieldBasketForCommander(commander_str, cmdr_dict) {
     });
 }
 
-function getMoxfieldRecommendationForList(cmdr_list, cmdr_dict) {
+last_start = null;
+
+function getMoxfieldRecommendationForList(cmdr_list, cmdr_dict, user_id) {
     return new Promise((resolve) => {
+        console.log('Recs for user ' + user_id + ' starting.');
         let start = Date.now();
         let cmdr_promises = [];
         for (let cmdr of cmdr_list) {
             cmdr_promises.push(getMoxfieldBasketForCommander(cmdr, cmdr_dict));
         }
         Promise.all(cmdr_promises).then(() => {
-            console.log('Complete in ' + Math.round((Date.now() - start) / 1000) + ' seconds.')
+            console.log('Recs for user ' + user_id + ' complete in ' + Math.round((Date.now() - (this.last_start == null? start: this.last_start)) / 1000) + ' seconds.');
+            this.last_start = Date.now();
             resolve();
         });
     })
@@ -300,12 +304,14 @@ function removeEdhrecTopCards(type, cmdr_dict) {
         axios.get("https://json.edhrec.com/pages/commanders/" + type + ".json").then( res => {
             if (res && res.data && res.data.cardlist) {
                 for (let i = 0; i < res.data.cardlist.length; i++) {
-                    if (i === 75) {
+                    if (i === 99) {
                         break;
                     }
                     if (res.data.cardlist[i].name) {
                         if(cmdr_dict[res.data.cardlist[i].name] !== undefined) {
-                            cmdr_dict[res.data.cardlist[i].name] = 0;
+                            if (cmdr_dict[res.data.cardlist[i].name] > 0){
+                                cmdr_dict[res.data.cardlist[i].name] *= -1;
+                            }
                         }
                     }
                 }
@@ -342,9 +348,10 @@ function fixBadCards(cmdr_dict) {
         cmdr_dict["Golos, Tireless Pilgrim"] = 0;
     }
     if (cmdr_dict["Esika, God of the Tree // The Prismatic Bridge"] !== undefined) {
-        cmdr_dict["Esika, God of the Tree // The Prismatic Bridge"] = 0;
+        if (cmdr_dict["Esika, God of the Tree // The Prismatic Bridge"] > 0) {
+            cmdr_dict["Esika, God of the Tree // The Prismatic Bridge"] = 0;
+        }
     }
-
 }
 
 /*****************************************
@@ -451,8 +458,7 @@ function updateUserRecommendations() {
                 let rec_promises = [];
                 for(let [key, value] of Object.entries(commander_lists)){
                     rec_promises.push(new Promise((res) => {
-                        getRecommendations(value).then((user_recs) => {
-                            console.log('Got recs for ' + key);
+                        getRecommendations(value, key).then((user_recs) => {
                             if (user_recs) {
                                 //printRecs(user_recs);
                                 pool.query('UPDATE users SET recs = $1, last_rec = now() WHERE id = $2', [JSON.stringify(user_recs), key],
@@ -503,7 +509,7 @@ function outputRecs(cmdr_dict) {
     }
     commander_recs.sort((a, b) => (a.count < b.count)? 1: -1);
     if (commander_recs.length > 20) {
-        commander_recs = commander_recs.slice(0, 20);
+        //commander_recs = commander_recs.slice(0, 20);
     }
     return commander_recs;
 }
@@ -517,13 +523,13 @@ function printRecs(commander_recs) {
     }
 }
 
-function getRecommendations(cmdr_list) {
+function getRecommendations(cmdr_list, user_id) {
     return new Promise((resolve) => {
         let cmdr_dict = {};
         let theme_dict = {};
         let theme_href_dict = {};
         let theme_cmdr_dict = {};
-        getMoxfieldRecommendationForList(cmdr_list, cmdr_dict).then(() => {
+        getMoxfieldRecommendationForList(cmdr_list, cmdr_dict, user_id).then(() => {
             getEdhrecThemeDict(cmdr_list, theme_dict, theme_href_dict, theme_cmdr_dict).then(() => {
                 removeEdhrecTopCards('year', cmdr_dict).then(() => {
                     removeEdhrecTopCards('month', cmdr_dict).then(() => {
